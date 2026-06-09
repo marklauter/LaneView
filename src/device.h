@@ -3,12 +3,12 @@
 
 typedef struct
 {
-   int   devices_used;
-   DEVICE   devices[MAX_DEVICES];
-}DEVICE_LIST_T;
+  int devices_used;
+  DEVICE devices[MAX_DEVICES];
+} DEVICE_LIST_T;
 
 extern DEVICE_LIST_T dev_list;
-extern int   IsSubmeter(DEVICE* dev);
+extern int IsSubmeter(DEVICE* dev);
 extern DEVICE_HISTORY device_history[MAX_HISTORY];
 
 extern UCHAR* x10_ltr[16];

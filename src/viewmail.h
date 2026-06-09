@@ -2,6 +2,6 @@
 #define _view_mail_hdr_h
 
 extern void ViewMail(void);
-extern int   MsgsOnIcu;
+extern int MsgsOnIcu;
 
 #endif

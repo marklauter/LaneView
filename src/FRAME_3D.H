@@ -12,4 +12,3 @@ extern void text_3d(UCHAR* text, int top, int left);
 extern void GroupBox(UCHAR* text, int top, int left, int height, int width);
 
 #endif
-

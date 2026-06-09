@@ -3,13 +3,13 @@
 
 typedef struct
 {
-   SCREEN_OBJECT_T   so;
-   UCHAR** strings;
-   int selected,
-       dropped,
-       count;
-   void    (_far* OnChange)();
-}DROPDOWN_BOX_T;
+  SCREEN_OBJECT_T so;
+  UCHAR** strings;
+  int selected,
+      dropped,
+      count;
+  void(_far* OnChange)();
+} DROPDOWN_BOX_T;
 
 extern void DisplayDropDown(DROPDOWN_BOX_T* ddb);
 extern void DropDownClick(DROPDOWN_BOX_T* ddb);

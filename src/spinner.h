@@ -6,13 +6,13 @@
 
 typedef struct
 {
-   SCREEN_OBJECT_T   so;
-   int value;
-   int max;
-   int min;
-   int increment;
-   void    (_far* OnChange)();
-}SPINNER_T;
+  SCREEN_OBJECT_T so;
+  int value;
+  int max;
+  int min;
+  int increment;
+  void(_far* OnChange)();
+} SPINNER_T;
 
 extern void DisplaySpinner(SPINNER_T* sp);
 extern void SpinnerClick(SPINNER_T* sp);

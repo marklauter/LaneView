@@ -206,35 +206,32 @@ $Log:   J:/intrlane/src/laneview/vcs/INSUBS.C_V  $
 #include "msgbox.h"
 #include "inutil.h"
 
-extern int  process_interval(PKT_INFO* incoming_packet);
-extern int  process_interval$(PKT_INFO* incoming_packet);
-extern int  IsSubmeter(DEVICE*);
+extern int process_interval(PKT_INFO* incoming_packet);
+extern int process_interval$(PKT_INFO* incoming_packet);
+extern int IsSubmeter(DEVICE*);
 extern INTERVAL_DATA$ interval$;
 
 void movez(char*, char*, int);
 void add_dollar(char*);
 void draw_top(void);
 
-extern PKT_INFO     pkt_info;
+extern PKT_INFO pkt_info;
 
-extern    struct tm* tod;
-extern    long      ltime;
-long   time_delta;
+extern struct tm* tod;
+extern long ltime;
+long time_delta;
 
-char    dayofweek[7][4] = {
-                      "SUN",
-                      "MON",
-                      "TUE",
-                      "WED",
-                      "THU",
-                      "FRI",
-                      "SAT"
-};
-
-
+char dayofweek[7][4] = {
+    "SUN",
+    "MON",
+    "TUE",
+    "WED",
+    "THU",
+    "FRI",
+    "SAT"};
 
 //extern          int     today;
-extern char    buffer[];
+extern char buffer[];
 extern METER meter;
 
 INTERVAL_DATA interval;
@@ -247,248 +244,200 @@ INTERVAL_DATA meter_interval;
 #define HB_R 79
 
 int hb_fields[2][4] = {
-                     (HB_T - 1) * 14,
-                     (HB_L - 1) * 8,
-                     HB_B * 14 - 1,
-                     HB_R * 8 - 1,
-                     -1, -1, -1, -1
-};
+    (HB_T - 1) * 14,
+    (HB_L - 1) * 8,
+    HB_B * 14 - 1,
+    HB_R * 8 - 1,
+    -1, -1, -1, -1};
 
+void add_dollar(char* cp) {
+  int i;
 
-void add_dollar(char* cp)
-{
-   int i;
-
-   i = strlen(cp);
-   while ((--i) >= 0)
-   {
-      if (*(cp + i) == ' ')
-      {
-         *(cp + i) = '$';
-         break;
-      }
-   }
+  i = strlen(cp);
+  while ((--i) >= 0) {
+    if (*(cp + i) == ' ') {
+      *(cp + i) = '$';
+      break;
+    }
+  }
 }
 
-
-void DrawTop(void)
-{
-   frame_3d(0, 0, 34, 639, FT_RAISED);
-   area_clear(1, 33, 1, 638, BG_WHT + FG_WHT);
-   //ptext("Date:",2, 3, BG_WHT + FG_BLK);
-   //ptext("Time:",16, 3, BG_WHT + FG_BLK);
-   ptext("Today's kWh:", 2, 150, BG_WHT + FG_BLK);
-   ptext("Today's $$$:", 16, 150, BG_WHT + FG_BLK);
-   ptext("Rate of Consumption", 2, 340, BG_WHT + FG_BLK);
-   ptext("Cost per kWh", 2, 510, BG_WHT + FG_BLK);
+void DrawTop(void) {
+  frame_3d(0, 0, 34, 639, FT_RAISED);
+  area_clear(1, 33, 1, 638, BG_WHT + FG_WHT);
+  //ptext("Date:",2, 3, BG_WHT + FG_BLK);
+  //ptext("Time:",16, 3, BG_WHT + FG_BLK);
+  ptext("Today's kWh:", 2, 150, BG_WHT + FG_BLK);
+  ptext("Today's $$$:", 16, 150, BG_WHT + FG_BLK);
+  ptext("Rate of Consumption", 2, 340, BG_WHT + FG_BLK);
+  ptext("Cost per kWh", 2, 510, BG_WHT + FG_BLK);
 }
 
+double round(double value, int precision) {
+  long intvalue;
 
-double round(double value, int precision)
-{
-   long   intvalue;
+  //exponent = pow(10, (double)precision);
 
-   //exponent = pow(10, (double)precision);
-
-   intvalue = (long)(value * pow(10, (double)precision) + 0.5);
-   return((double)intvalue / pow(10, (double)precision));
+  intvalue = (long)(value * pow(10, (double)precision) + 0.5);
+  return ((double)intvalue / pow(10, (double)precision));
 }
 
-void UpdateTop(long* last_shown)
-{
-   char   work[100];
-   int      i;
-   long   my_time;
-   long   TotalWork;
+void UpdateTop(long* last_shown) {
+  char work[100];
+  int i;
+  long my_time;
+  long TotalWork;
 
-   *last_shown = ltime;
+  *last_shown = ltime;
 
+  hide_mouse();
 
-   hide_mouse();
-
-
-   //=============================
+  //=============================
   // Time
   //=============================
-   time(&my_time);
-   my_time += time_delta;
-   tod = localtime(&my_time);
+  time(&my_time);
+  my_time += time_delta;
+  tod = localtime(&my_time);
 
-   //=============================
-   // Date
-   //=============================
-   //ptext(dayofweek[tod->tm_wday], 2, 46, BG_WHT + FG_BLK);   //GES
-   ptext(dayofweek[tod->tm_wday], 2, 8, BG_WHT + FG_BLK);   //GES
-   sprintf(work, "%d/%d/%4d", tod->tm_mon + 1, tod->tm_mday, tod->tm_year + 1900);
-   //ptext(work, 2, 82, BG_WHT + FG_BLK); //GES
-   ptext(work, 2, 44, BG_WHT + FG_BLK); //GES
+  //=============================
+  // Date
+  //=============================
+  //ptext(dayofweek[tod->tm_wday], 2, 46, BG_WHT + FG_BLK);   //GES
+  ptext(dayofweek[tod->tm_wday], 2, 8, BG_WHT + FG_BLK); //GES
+  sprintf(work, "%d/%d/%4d", tod->tm_mon + 1, tod->tm_mday, tod->tm_year + 1900);
+  //ptext(work, 2, 82, BG_WHT + FG_BLK); //GES
+  ptext(work, 2, 44, BG_WHT + FG_BLK); //GES
 
-   if (tod->tm_hour > 11)
-   {
-      ptext("pm", 16, 114 - 38, BG_WHT + FG_BLK);   // ges
-   }
-   else
-   {
-      ptext("am", 16, 114 - 38, BG_WHT + FG_BLK);   //ges
-   }
-   if (tod->tm_hour > 12)
-   {
-      tod->tm_hour -= 12;
-   }
-   if (tod->tm_hour == 0)
-   {
-      tod->tm_hour = 12;
-   }
-   sprintf(work, "%02d:%02d:%02d", tod->tm_hour, tod->tm_min, tod->tm_sec);
-   //ptext(work, 16, 46,BG_WHT +  FG_BLK);   //GES
-   ptext(work, 16, 8, BG_WHT + FG_BLK);   //GES
+  if (tod->tm_hour > 11) {
+    ptext("pm", 16, 114 - 38, BG_WHT + FG_BLK); // ges
+  } else {
+    ptext("am", 16, 114 - 38, BG_WHT + FG_BLK); //ges
+  }
+  if (tod->tm_hour > 12) {
+    tod->tm_hour -= 12;
+  }
+  if (tod->tm_hour == 0) {
+    tod->tm_hour = 12;
+  }
+  sprintf(work, "%02d:%02d:%02d", tod->tm_hour, tod->tm_min, tod->tm_sec);
+  //ptext(work, 16, 46,BG_WHT +  FG_BLK);   //GES
+  ptext(work, 16, 8, BG_WHT + FG_BLK); //GES
 
+  //=============================
+  // Today's Energy Usage
+  //=============================
+  TotalWork = 0;
+  for (i = 0; i < 23; ++i) {
+    TotalWork += meter.current_day[i];
+  }
+  sprintf(work, "%-7.2f", ((double)TotalWork) / 10000.0);
+  //sprintf(work, "%-7.2f", (meter.current_dial - meter.first_today)/10000.0 );
+  ptext(work, 2, 250, BG_WHT + FG_BLK);
 
-    //=============================
-   // Today's Energy Usage
-   //=============================
-   TotalWork = 0;
-   for (i = 0; i < 23; ++i)
-   {
-      TotalWork += meter.current_day[i];
-   }
-   sprintf(work, "%-7.2f", ((double)TotalWork) / 10000.0);
-   //sprintf(work, "%-7.2f", (meter.current_dial - meter.first_today)/10000.0 );
-   ptext(work, 2, 250, BG_WHT + FG_BLK);
+  sprintf(work, "%-7.2f", (double)(meter.todays_dollars) / 100000.0);
+  ptext(work, 16, 250, BG_WHT + FG_BLK);
 
-   sprintf(work, "%-7.2f", (double)(meter.todays_dollars) / 100000.0);
-   ptext(work, 16, 250, BG_WHT + FG_BLK);
+  if (meter_interval.device_slot != 0) {
+    sprintf(work, "%-7.4fkW", meter_interval.kwh / 10000.0);
+    ptext(work, 16, 340, BG_WHT + FG_BLK);
+    sprintf(work, "$%-7.2f", (double)(meter_interval.kwh * meter_interval.cost_kwh) / 1000000000.0);
+    ptext(work, 16, 436, BG_WHT + FG_BLK);
+  } else {
+    if (DEMO == TRUE) {
+      ptext("DEMO MODE", 16, 340, BG_WHT + FG_BLK);
+    } else if (LVLITE == TRUE) {
+      ptext("LITE", 16, 340, BG_WHT + FG_BLK);
+    } else {
+      ptext("Waiting...", 16, 340, BG_WHT + FG_BLK);
+    }
+  }
 
-   if (meter_interval.device_slot != 0)
-   {
-      sprintf(work, "%-7.4fkW", meter_interval.kwh / 10000.0);
-      ptext(work, 16, 340, BG_WHT + FG_BLK);
-      sprintf(work, "$%-7.2f", (double)(meter_interval.kwh * meter_interval.cost_kwh) / 1000000000.0);
-      ptext(work, 16, 436, BG_WHT + FG_BLK);
-   }
-   else
-   {
-      if (DEMO == TRUE)
-      {
-         ptext("DEMO MODE", 16, 340, BG_WHT + FG_BLK);
+  //==============================================
+  // Status line update
+  //==============================================
+  frame_3d(459, 398, 16, 199, FT_PRESSED); //load control in progress
+  if (interval.shedding_status > 0) {
+    ptext("Energy Control: Ovr Rd", 460, 402, BG_WHT + FG_RED);
+
+    if (interval.shedding_status & 1) {
+      area_clear(460, 474, 434, 595, FG_WHT);
+    } else {
+      sprintf(work, "Energy Control: Pri %1d ", interval.shedding_status / 8);
+      ptext(work, 460, 402, BG_WHT + FG_RED);
+    }
+  }
+
+  //==============================================
+  // Rate Mode Status
+  //==============================================
+  if (meter_interval.device_slot != 0) {
+    for (i = 4; i < 8; i++) {
+      if (interval$.mode_byte2 & (0x01 << i)) {
+        switch (i) {
+        case 4: // low cost mode
+          ptext("Low        ", 17, 511, FG_BLK + BG_WHT);
+          break;
+        case 5: // moderate cost mode
+          ptext("Medium     ", 17, 511, FG_BLK + BG_WHT);
+          break;
+        case 6: // high cost mode
+          ptext("High       ", 17, 511, FG_BLK + BG_WHT);
+          break;
+        case 7: // maximum mode
+          ptext("Critical   ", 17, 511, FG_RED + BG_WHT);
+          break;
+        }
+        break;
       }
-      else if (LVLITE == TRUE)
-      {
-         ptext("LITE", 16, 340, BG_WHT + FG_BLK);
-      }
-      else
-      {
-         ptext("Waiting...", 16, 340, BG_WHT + FG_BLK);
-      }
-   }
-
-   //==============================================
-   // Status line update
-   //==============================================
-   frame_3d(459, 398, 16, 199, FT_PRESSED);//load control in progress
-   if (interval.shedding_status > 0)
-   {
-      ptext("Energy Control: Ovr Rd", 460, 402, BG_WHT + FG_RED);
-
-      if (interval.shedding_status & 1)
-      {
-         area_clear(460, 474, 434, 595, FG_WHT);
-      }
-      else
-      {
-         sprintf(work, "Energy Control: Pri %1d ", interval.shedding_status / 8);
-         ptext(work, 460, 402, BG_WHT + FG_RED);
-      }
-   }
-
-   //==============================================
-   // Rate Mode Status
-   //==============================================
-   if (meter_interval.device_slot != 0)
-   {
-      for (i = 4; i < 8; i++)
-      {
-         if (interval$.mode_byte2 & (0x01 << i))
-         {
-            switch (i)
-            {
-            case 4:   // low cost mode
-               ptext("Low        ", 17, 511, FG_BLK + BG_WHT);
-               break;
-            case 5:   // moderate cost mode
-               ptext("Medium     ", 17, 511, FG_BLK + BG_WHT);
-               break;
-            case 6:   // high cost mode
-               ptext("High       ", 17, 511, FG_BLK + BG_WHT);
-               break;
-            case 7:   // maximum mode
-               ptext("Critical   ", 17, 511, FG_RED + BG_WHT);
-               break;
-            }
-            break;
-         }
-      }
-   }
-   else
-   {
-      if (DEMO == TRUE)
-      {
-         //pbutton ( 16, 510, 15, 80, PB_DN, BG_CYN);
-         ptext("Medium     ", 17, 511, FG_BLK + BG_WHT);
-      }
-      if (LVLITE == TRUE)
-      {
-         //pbutton ( 16, 510, 15, 80, PB_DN, BG_GRN);
-         ptext("LVLITE   ", 17, 511, FG_BLK + BG_WHT);
-      }
-   }
-   unhide_mouse();
+    }
+  } else {
+    if (DEMO == TRUE) {
+      //pbutton ( 16, 510, 15, 80, PB_DN, BG_CYN);
+      ptext("Medium     ", 17, 511, FG_BLK + BG_WHT);
+    }
+    if (LVLITE == TRUE) {
+      //pbutton ( 16, 510, 15, 80, PB_DN, BG_GRN);
+      ptext("LVLITE   ", 17, 511, FG_BLK + BG_WHT);
+    }
+  }
+  unhide_mouse();
 }
 
 // returns the new length of the string
-int trim(char* str_to_trim)
-{
-   int      i;
-   int      j;
+int trim(char* str_to_trim) {
+  int i;
+  int j;
 
-   j = i = strlen(str_to_trim);
-   if (i)
-   {
-      while (*(str_to_trim + (--i)) == ' ')
-      {
-         --j;
-         *(str_to_trim + i) = '\0';
-      }
-   }
-   return(j);
+  j = i = strlen(str_to_trim);
+  if (i) {
+    while (*(str_to_trim + (--i)) == ' ') {
+      --j;
+      *(str_to_trim + i) = '\0';
+    }
+  }
+  return (j);
 }
 
-void fillz(UCHAR* cp, USHORT len, UCHAR c)
-{
-   memset(cp, c, len);
-   *(cp + len) = '\0';
-   return;
+void fillz(UCHAR* cp, USHORT len, UCHAR c) {
+  memset(cp, c, len);
+  *(cp + len) = '\0';
+  return;
 }
 
-void movez(char* dest, char* source, int len)
-{
-   memcpy(dest, source, len);
-   *(dest + len) = '\0';
-   return;
+void movez(char* dest, char* source, int len) {
+  memcpy(dest, source, len);
+  *(dest + len) = '\0';
+  return;
 }
 
-void FitText(char* dest, char* src, int len)
-{
-   int slen;
+void FitText(char* dest, char* src, int len) {
+  int slen;
 
-   slen = strlen(src);
-   if (slen < len)
-   {
-      memset(dest, ' ', len);
-      memcpy(dest, src, slen);
-   }
-   else
-   {
-      memcpy(dest, src, len);
-   }
+  slen = strlen(src);
+  if (slen < len) {
+    memset(dest, ' ', len);
+    memcpy(dest, src, slen);
+  } else {
+    memcpy(dest, src, len);
+  }
 }

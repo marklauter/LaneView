@@ -15,4 +15,4 @@
 
 //extern int   billing_read;
 
-void   BillingMenu(void);
+void BillingMenu(void);

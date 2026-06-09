@@ -140,61 +140,61 @@ $Log:   J:/intrlane/src/laneview/vcs/INUTIL.C_V  $
 #include "inio.h"
 #include "billing.h"
 
-extern int  kbchar(void);
-extern int  user_log(int);
+extern int kbchar(void);
+extern int user_log(int);
 extern void user_log_end_level(void);
-extern int  user_download(void);
+extern int user_download(void);
 extern void position(int, int);
 extern void area_clear(int, int, int, int, int);
 extern void beep(void);
-extern int  day_of_week(int, int, int);
+extern int day_of_week(int, int, int);
 //extern int  copy_file(char*, char*);
 //extern int  download_history(void);
 //int  is_controlled(DEVICE*);
 
 //#define MAX_ATTEMPTS 32
-extern char       buffer[85];
-extern int       day_tab[2][13];
+extern char buffer[85];
+extern int day_tab[2][13];
 extern DEVICE_HISTORY device_history[];
-extern   METER       meter;
-extern struct CEBUSDATA
-{
-   int IRQ;
-   int HouseCode;
-   int BasePort;
-   int OutsideHC;
+extern METER meter;
+extern struct CEBUSDATA {
+  int IRQ;
+  int HouseCode;
+  int BasePort;
+  int OutsideHC;
 } cebusSetup;
 
-unsigned long       id;
-unsigned long       ackid;
-PKT_INFO   pkt_info;
+unsigned long id;
+unsigned long ackid;
+PKT_INFO pkt_info;
 
-int          today;
-int          this_month;
-int          this_year;
+int today;
+int this_month;
+int this_year;
 
 struct tm* tod;
-long      ltime;
-long      last_complete;
+long ltime;
+long last_complete;
 
 extern INTERVAL_DATA interval;
 
-char   house_code[16] = { 0x06,     /* A */
-            0x0E,     /* B */
-            0x02,     /* C */
-            0x0A,     /* D */
-            0x01,     /* E */
-            0x09,     /* F */
-            0x05,     /* G */
-            0x0D,     /* H */
-            0x07,     /* I */
-            0x0F,     /* J */
-            0x03,     /* K */
-            0x0B,     /* L */
-            0x00,     /* M */
-            0x08,     /* N */
-            0x04,     /* O */
-            0x0C,     /* P */
+char house_code[16] = {
+    0x06, /* A */
+    0x0E, /* B */
+    0x02, /* C */
+    0x0A, /* D */
+    0x01, /* E */
+    0x09, /* F */
+    0x05, /* G */
+    0x0D, /* H */
+    0x07, /* I */
+    0x0F, /* J */
+    0x03, /* K */
+    0x0B, /* L */
+    0x00, /* M */
+    0x08, /* N */
+    0x04, /* O */
+    0x0C, /* P */
 };
 
 char CEBUS_FAIL_MSG[] = "CeBus Failure";
@@ -203,7 +203,7 @@ char CEBUS_ID_MSG[] = "CeBus ID not found";
 char CEBUS_TIMEDOUT_MSG[] = "CeBus Timed Out";
 
 extern void movez(char*, char*, int);
-extern int  enter(int, int);    /* input from keyboard
+extern int enter(int, int); /* input from keyboard
             parameters: type (INTEGER, ALPHA, FLOAT)
                    OK_F9 / NO_F9
             returns:   -1 if ESC entered,
@@ -211,128 +211,101 @@ extern int  enter(int, int);    /* input from keyboard
                   -20 for F10
                   or entry length   */
 
+close_day() {
+  int j, hist;
 
-close_day()
-{
-   int     j, hist;
+  // new day --
+  memset(&dawn_dusk_time, 0, sizeof(DAWN_DUSK_TIME));
+  //billing_read = FALSE;
 
-   // new day -- 
-   memset(&dawn_dusk_time, 0, sizeof(DAWN_DUSK_TIME));
-   //billing_read = FALSE;
-
-   meter.first_today = meter.current_dial;
-   meter.todays_dollars = 0;
-   for (j = 0; j < 24; ++j)
-   {
-      meter.current_day[j] = 0;
-      meter.current_day$[j] = 0;
-      meter.tod_current_day$[j] = 0;
-      meter.var_current_day$[j] = 0;
-   }
-   for (hist = 0; hist < MAX_HISTORY; ++hist)
-   {
-      for (j = 0; j < 24; ++j)
-      {
-         device_history[hist].current_day[j] = 0;
-         device_history[hist].current_day$[j] = 0;
+  meter.first_today = meter.current_dial;
+  meter.todays_dollars = 0;
+  for (j = 0; j < 24; ++j) {
+    meter.current_day[j] = 0;
+    meter.current_day$[j] = 0;
+    meter.tod_current_day$[j] = 0;
+    meter.var_current_day$[j] = 0;
+  }
+  for (hist = 0; hist < MAX_HISTORY; ++hist) {
+    for (j = 0; j < 24; ++j) {
+      device_history[hist].current_day[j] = 0;
+      device_history[hist].current_day$[j] = 0;
+    }
+  }
+  if ((interval.newday == 'M') || (interval.newday == 'Y')) { // new month -- close out
+    meter.last_mo_start_dial = meter.month_start_dial;
+    meter.month_start_dial = meter.current_dial;
+    for (j = 0; j < 24; ++j) {
+      meter.last_month[j] = meter.mtd[j];
+      meter.last_month$[j] = meter.mtd$[j];
+      meter.tod_last_month$[j] = meter.tod_mtd$[j];
+      meter.var_last_month$[j] = meter.var_mtd$[j];
+      meter.mtd[j] = 0;
+      meter.mtd$[j] = 0;
+      meter.tod_mtd$[j] = 0;
+      meter.var_mtd$[j] = 0;
+    }
+    for (hist = 0; hist < MAX_HISTORY; ++hist) {
+      for (j = 0; j < 24; ++j) {
+        device_history[hist].last_month[j] = device_history[hist].mtd[j];
+        device_history[hist].last_month$[j] = device_history[hist].mtd$[j];
+        device_history[hist].mtd[j] = 0;
+        device_history[hist].mtd$[j] = 0;
       }
-   }
-   if ((interval.newday == 'M') || (interval.newday == 'Y'))
-   {                // new month -- close out
-      meter.last_mo_start_dial = meter.month_start_dial;
-      meter.month_start_dial = meter.current_dial;
-      for (j = 0; j < 24; ++j)
-      {
-         meter.last_month[j] = meter.mtd[j];
-         meter.last_month$[j] = meter.mtd$[j];
-         meter.tod_last_month$[j] = meter.tod_mtd$[j];
-         meter.var_last_month$[j] = meter.var_mtd$[j];
-         meter.mtd[j] = 0;
-         meter.mtd$[j] = 0;
-         meter.tod_mtd$[j] = 0;
-         meter.var_mtd$[j] = 0;
+    }
+  }
+  if (interval.newday == 'Y') { // new year -- close out
+    for (hist = 0; hist < MAX_HISTORY; ++hist) {
+      for (j = 0; j < 24; ++j) {
+        device_history[hist].ytd[j] = 0;
+        device_history[hist].ytd$[j] = 0;
       }
-      for (hist = 0; hist < MAX_HISTORY; ++hist)
-      {
-         for (j = 0; j < 24; ++j)
-         {
-            device_history[hist].last_month[j]
-               = device_history[hist].mtd[j];
-            device_history[hist].last_month$[j]
-               = device_history[hist].mtd$[j];
-            device_history[hist].mtd[j] = 0;
-            device_history[hist].mtd$[j] = 0;
-         }
-      }
-   }
-   if (interval.newday == 'Y')
-   {                // new year -- close out
-      for (hist = 0; hist < MAX_HISTORY; ++hist)
-      {
-         for (j = 0; j < 24; ++j)
-         {
-            device_history[hist].ytd[j] = 0;
-            device_history[hist].ytd$[j] = 0;
-         }
-      }
-      for (j = 0; j < 24; ++j)
-      {
-         meter.ytd[j] = 0;
-         meter.ytd$[j] = 0;
-         meter.tod_ytd$[j] = 0;
-         meter.var_ytd$[j] = 0;
-      }
-   }
-   return(0);
+    }
+    for (j = 0; j < 24; ++j) {
+      meter.ytd[j] = 0;
+      meter.ytd$[j] = 0;
+      meter.tod_ytd$[j] = 0;
+      meter.var_ytd$[j] = 0;
+    }
+  }
+  return (0);
 }
 
-next_day(UCHAR* month, UCHAR* day, UCHAR* year)
-{
-   int     leap;
+next_day(UCHAR* month, UCHAR* day, UCHAR* year) {
+  int leap;
 
-   if ((*year % 4) == 0)
-   {
-      leap = 1;
-   }
-   else
-   {
-      leap = 0;
-   }
-   if (++(*day) > day_tab[leap][*month])
-   {
-      *day = 1;
-      if (++(*month) > 12)
-      {
-         *month = 1;
-         ++(*year);
-      }
-   }
-   return(0);
+  if ((*year % 4) == 0) {
+    leap = 1;
+  } else {
+    leap = 0;
+  }
+  if (++(*day) > day_tab[leap][*month]) {
+    *day = 1;
+    if (++(*month) > 12) {
+      *month = 1;
+      ++(*year);
+    }
+  }
+  return (0);
 }
 
-prev_day(UCHAR* month, UCHAR* day, UCHAR* year)
-{
-   int     leap;
+prev_day(UCHAR* month, UCHAR* day, UCHAR* year) {
+  int leap;
 
-   if ((*year % 4) == 0)
-   {
-      leap = 1;
-   }
-   else
-   {
-      leap = 0;
-   }
-   if (--(*day) == 0)
-   {
-      --(*month);
-      if (*month == 0)
-      {
-         *month = 12;
-         --(*year);
-      }
-      *day = day_tab[leap][*month];
-   }
-   return(0);
+  if ((*year % 4) == 0) {
+    leap = 1;
+  } else {
+    leap = 0;
+  }
+  if (--(*day) == 0) {
+    --(*month);
+    if (*month == 0) {
+      *month = 12;
+      --(*year);
+    }
+    *day = day_tab[leap][*month];
+  }
+  return (0);
 }
 
 #if 0
@@ -350,100 +323,78 @@ int is_controlled(DEVICE* dev)
 }
 #endif
 
-int TableToDisk(void* table, int size_of_table_item, int table_entry_count, UCHAR* file_name)
-{
-   FILE* stream;
-   int dev_ver;
-   if (DEMO == TRUE)
-   {
-      return SUCCESS;
-   }
+int TableToDisk(void* table, int size_of_table_item, int table_entry_count, UCHAR* file_name) {
+  FILE* stream;
+  int dev_ver;
+  if (DEMO == TRUE) {
+    return SUCCESS;
+  }
 
-   dev_ver = DEVICES_VERSION;
-   if ((stream = fopen(file_name, "wb")) == NULL)
-   {
-      return FAILURE;
-   }
-   else
-   {
-      fwrite(&dev_ver, sizeof(int), 1, stream);
-      fwrite(&table_entry_count, sizeof(int), 1, stream);
-      fwrite(table, size_of_table_item, table_entry_count, stream);
-      fclose(stream);
-   }
-   return SUCCESS;
+  dev_ver = DEVICES_VERSION;
+  if ((stream = fopen(file_name, "wb")) == NULL) {
+    return FAILURE;
+  } else {
+    fwrite(&dev_ver, sizeof(int), 1, stream);
+    fwrite(&table_entry_count, sizeof(int), 1, stream);
+    fwrite(table, size_of_table_item, table_entry_count, stream);
+    fclose(stream);
+  }
+  return SUCCESS;
 }
 
-int TableFromDisk(void* table, int size_of_table_item, UCHAR* file_name)
-{
-   FILE* stream;
-   int dev_ver;
-   int count;
+int TableFromDisk(void* table, int size_of_table_item, UCHAR* file_name) {
+  FILE* stream;
+  int dev_ver;
+  int count;
 
-   if ((stream = fopen(file_name, "rb")) == NULL)
-   {
-      return FALSE; //failure
-   }
-   else
-   {
-      fread(&dev_ver, sizeof(int), 1, stream);
-      fread(&count, sizeof(int), 1, stream);
-      fread(table, size_of_table_item, count, stream);
-      fclose(stream);
-   }
-   if (dev_ver != DEVICES_VERSION)
-   {
-      count = 0;
-   }
-   return count;
+  if ((stream = fopen(file_name, "rb")) == NULL) {
+    return FALSE; //failure
+  } else {
+    fread(&dev_ver, sizeof(int), 1, stream);
+    fread(&count, sizeof(int), 1, stream);
+    fread(table, size_of_table_item, count, stream);
+    fclose(stream);
+  }
+  if (dev_ver != DEVICES_VERSION) {
+    count = 0;
+  }
+  return count;
 }
 
-void Status(UCHAR* status)
-{
-   UCHAR work[25];
+void Status(UCHAR* status) {
+  UCHAR work[25];
 
-   area_clear(460, 474, 72, 392, FG_WHT);
+  area_clear(460, 474, 72, 392, FG_WHT);
 
-   ptext("Status: ", 460, 7, BG_TRANSPARENT + FG_BLK);
-   ptext(status, 460, 74, BG_TRANSPARENT + FG_BLK);
+  ptext("Status: ", 460, 7, BG_TRANSPARENT + FG_BLK);
+  ptext(status, 460, 74, BG_TRANSPARENT + FG_BLK);
 
-   frame_3d(459, 4, 16, 62, FT_PRESSED); //Status
+  frame_3d(459, 4, 16, 62, FT_PRESSED); //Status
 
-   frame_3d(459, 70, 16, 324, FT_PRESSED); //*status text
+  frame_3d(459, 70, 16, 324, FT_PRESSED); //*status text
 
-   frame_3d(459, 601, 16, 34, FT_PRESSED); //OVR
+  frame_3d(459, 601, 16, 34, FT_PRESSED); //OVR
 
-   if (over_write == TRUE)
-   {
-      ptext("OVR", 460, 605, BG_WHT + FG_BLK);
-   }
-   else
-   {
-      ptext("INS", 460, 605, BG_WHT + FG_BLK);
-   }
+  if (over_write == TRUE) {
+    ptext("OVR", 460, 605, BG_WHT + FG_BLK);
+  } else {
+    ptext("INS", 460, 605, BG_WHT + FG_BLK);
+  }
 
-   frame_3d(459, 398, 16, 199, FT_PRESSED);//load control in progress
+  frame_3d(459, 398, 16, 199, FT_PRESSED); //load control in progress
 
-   if (interval.shedding_status > 0)
-   {
-      if (interval.shedding_status & 1)
-      {
-         ptext("Utility Control: Ovr Rd", 460, 402, BG_WHT + FG_LGRN);
-      }
-      else
-      {
-         sprintf(work, "Utility Control: Pri %d", interval.shedding_status / 8);
-         ptext(work, 460, 402, BG_WHT + FG_RED);
-      }
-   }
-   else
-   {
-      sprintf(work, "Utility Control: None");
-      ptext(work, 460, 402, BG_WHT + FG_BLK);
-   }
-   if (secured_user)
-   {
-      ptext("SU", 460, 370, BG_WHT + FG_BLK);
-   }
+  if (interval.shedding_status > 0) {
+    if (interval.shedding_status & 1) {
+      ptext("Utility Control: Ovr Rd", 460, 402, BG_WHT + FG_LGRN);
+    } else {
+      sprintf(work, "Utility Control: Pri %d", interval.shedding_status / 8);
+      ptext(work, 460, 402, BG_WHT + FG_RED);
+    }
+  } else {
+    sprintf(work, "Utility Control: None");
+    ptext(work, 460, 402, BG_WHT + FG_BLK);
+  }
+  if (secured_user) {
+    ptext("SU", 460, 370, BG_WHT + FG_BLK);
+  }
 }
-
