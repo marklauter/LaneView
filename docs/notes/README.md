@@ -5,7 +5,7 @@ tags: [laneview, legacy, dos, overview, note]
 created: 2026-06-08
 aliases: []
 document.status: draft
-edge.indexes: [docs/notes/01-object-oriented-c.md, docs/notes/02-the-message-loop.md, docs/notes/03-the-billing-language.md, docs/notes/04-msgbox-and-screen-save.md, docs/notes/05-the-widget-toolkit.md, docs/notes/06-energy-management-domain.md, docs/notes/07-mouse-cursors-and-easter-eggs.md, docs/notes/08-more-cool-algorithms.md]
+edge.indexes: [docs/notes/01-object-oriented-c.md, docs/notes/02-the-message-loop.md, docs/notes/03-the-billing-language.md, docs/notes/04-msgbox-and-screen-save.md, docs/notes/05-the-widget-toolkit.md, docs/notes/06-energy-management-domain.md, docs/notes/07-mouse-cursors-and-easter-eggs.md, docs/notes/08-more-cool-algorithms.md, docs/notes/billing-language-reference.md]
 ---
 
 # LaneView — field notes on a remarkable little DOS program
@@ -73,6 +73,9 @@ Florida), and the VCS user `tmges` plus author initials `MSL` (Mark Lauter) and 
   epoch-counting perpetual calendar, a dual-axis chart compositor, a greedy word-wrap memo
   editor, the X-10 house-code scramble, fixed-point money, and function pointers used as
   return addresses.
+- [The billing language — grammar reference](billing-language-reference.md): the formal spec
+  for `billing.prg` — lexical rules, an EBNF grammar, the statement and expression reference,
+  the host-provided variable namespace, limits, and parser gotchas. Companion to note 03.
 
 ## Reading this code in 2026
 

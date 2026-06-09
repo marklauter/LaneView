@@ -19,6 +19,11 @@ file, with no recompile.
 interpreter with control flow, a variable and array store, and — the gem — a recursive
 expression evaluator that works by rewriting the string in place.
 
+For the formal spec — an EBNF grammar, the statement and expression reference, the
+host-provided variable namespace, and the parser's gotchas — see
+[[docs/notes/billing-language-reference.md]]. This note walks the implementation; that one
+pins down the language.
+
 ## The shape of the language
 
 From the interpreter, the language offers:
