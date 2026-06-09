@@ -9,33 +9,32 @@
 
 typedef struct
 {
-   SCREEN_OBJECT_T      so;
+  SCREEN_OBJECT_T so;
 
-   int               max_length;
-   int               enabled;
+  int max_length;
+  int enabled;
 
-   UCHAR* text;
+  UCHAR* text;
 
-   // attached scroll bar, if any
-   SCROLL_BAR_T* sbobj;
+  // attached scroll bar, if any
+  SCROLL_BAR_T* sbobj;
 
-   void            (_far* OnChange)();
+  void(_far* OnChange)();
 
-   int               length;
+  int length;
 
-   int               line_start[MEMO_MAX_LINES];
-   int               line_length[MEMO_MAX_LINES];
-   UCHAR            cursor_col;   // current column
-   UCHAR            cursor_row;   // current row
-   UCHAR            rows;
-   // Displayed area variables
-   int               display_top;
-   int               display_height;
+  int line_start[MEMO_MAX_LINES];
+  int line_length[MEMO_MAX_LINES];
+  UCHAR cursor_col; // current column
+  UCHAR cursor_row; // current row
+  UCHAR rows;
+  // Displayed area variables
+  int display_top;
+  int display_height;
 } MEMOBOX_T;
 
 // function call example
 //void            (_far * OnChange)();   //(* OnScroll)(); <- thats a call!!!
-
 
 extern void MemoBoxScroll(MEMOBOX_T* memo_box, int direction);
 extern void MemoBoxPaint(MEMOBOX_T* memo_box);

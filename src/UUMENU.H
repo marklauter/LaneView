@@ -9,7 +9,7 @@ extern USHORT dbd_id;
 
 extern void UtilityUsageBtnClick(void);
 extern void UtilityUsageMenu(void);
-extern void ParseDate(char *buf, int *mon, int *day, int *year);
+extern void ParseDate(char* buf, int* mon, int* day, int* year);
 extern void DisplayByDayMenu(USHORT device_id);
 
 #endif

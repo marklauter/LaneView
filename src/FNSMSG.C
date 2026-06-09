@@ -16,7 +16,6 @@
 
 // function_not_supported
 
-void function_not_supported(void)
-{
-   msgbox("The function you have selected is not|supported by this release of InterLane.", "Information", MB_OK);
+void function_not_supported(void) {
+  msgbox("The function you have selected is not|supported by this release of InterLane.", "Information", MB_OK);
 }

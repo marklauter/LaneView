@@ -3,18 +3,18 @@
 
 typedef struct
 {
-   //data
-   SCREEN_OBJECT_T so;
-   int      item_count,
-      item_selected,// 0 is first item on list
+  //data
+  SCREEN_OBJECT_T so;
+  int item_count,
+      item_selected, // 0 is first item on list
       top_item,
       display_count;
 
-   void** sub_list;
+  void** sub_list;
 
-   void   (_far* DisplayItem)();   // calls the appropriate diplay routine for the items on the list
-   void   (_far* OnChange)();
-   //void         (_far * OnScroll)();   //(* OnScroll)(); <- thats a call!!!
+  void(_far* DisplayItem)(); // calls the appropriate diplay routine for the items on the list
+  void(_far* OnChange)();
+  //void         (_far * OnScroll)();   //(* OnScroll)(); <- thats a call!!!
 } LISTBOX_T;
 
 extern void ListBoxScroll(LISTBOX_T* lb);

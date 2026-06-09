@@ -1,6 +1,6 @@
 //   Copyright 1996 TeCom Inc. All rights reserved
 //  File creation date 22 OCT 96
-//  Created by Mark Lauter : TMMSL     
+//  Created by Mark Lauter : TMMSL
 //   Last modified:
 #ifndef _VGA_H
 #define _VGA_H
@@ -10,8 +10,8 @@
 
 typedef struct
 {
-   char current;
-   char type; //type:  0=push_button, 1=text_box
+  char current;
+  char type; //type:  0=push_button, 1=text_box
 } FOCUS_T;
 
 //graphics functions
@@ -30,16 +30,15 @@ extern void scroll_window_down(int top_row, int left_col, int bot_row, int right
 extern void line(int x1, int y1, int x2, int y2, int color);
 extern void setdisplaymode(int);
 
-
 // bold & light font defs
-#define BOLD 1      
+#define BOLD 1
 #define LGHT 0
 // font space...
 extern UCHAR font_array[2][4096];
 // Text and cursor functions
 extern void get_font_loc(char* font_array);
 extern void position(int row, int col);
-extern int  get_cursor(void);
+extern int get_cursor(void);
 extern void set_cursor(int);
 extern void rev(char*);
 extern void hide_cursor(void);
@@ -48,19 +47,19 @@ extern void norm(char*);
 extern void attrib(unsigned);
 extern void bold(char*);
 extern void rev(char*);
-extern int  trim(char*);
+extern int trim(char*);
 extern void ptext(char* text, int top, int left, int color);
 
 // mouse cordinate used in MouseOver();
 typedef struct
 {
-   int      top, left, width, height;
+  int top, left, width, height;
 } COORDINATE_T;
 // mouse functions
-extern void mouse_cursor(void* mouse_def);   //change the mouse cursor
+extern void mouse_cursor(void* mouse_def); //change the mouse cursor
 extern void hide_mouse(void);
 extern void unhide_mouse(void);
-extern int  find_mouse(void);
+extern int find_mouse(void);
 extern void mouse_on(void);
 extern void mouse_off(void);
 extern void position_mouse(int top, int left);

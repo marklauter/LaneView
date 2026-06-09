@@ -1,0 +1,20 @@
+# clang-format configuration for LaneView (legacy 1996 Visual C++ sources).
+# Style: modern K&R / LLVM-derived -- attached braces, 2-space indent.
+---
+Language: Cpp
+BasedOnStyle: LLVM
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+BreakBeforeBraces: Attach
+PointerAlignment: Left
+# Keep this pass to *pure reformatting*: don't rewrap long lines, don't reflow
+# the historical RCS $Log$ / copyright comment headers, don't reorder includes
+# (order can carry meaning in legacy C).
+ColumnLimit: 0
+ReflowComments: false
+SortIncludes: false
+# Match the repo's LF line-ending policy (see .gitattributes).
+LineEnding: LF
+InsertNewlineAtEOF: true
+...

@@ -22,7 +22,6 @@
 #include "ctrlschd.h"
 #include "devcat.h"
 
-
 ////////////////////////////////////////////////
 // Device Categories
 // From 2box.h
@@ -35,18 +34,15 @@
 //#define ALERT_DEVICE_CATEGORY   5
 //#define SECURITY            6
 
-DEVICE_CATEGORY_LIST_T   dev_cat = { 5,
-                           "ALL",
-                           "Lighting",
-                           "Comfort Control",
-                           "Pool/Spa",
-                           "Sprinkler"
-};
+DEVICE_CATEGORY_LIST_T dev_cat = {5,
+                                  "ALL",
+                                  "Lighting",
+                                  "Comfort Control",
+                                  "Pool/Spa",
+                                  "Sprinkler"};
 //                           "Alert",
 //                           "Security"
 
-
-void DisplayDeviceCategory(UCHAR* desc, int top, int left, UCHAR color)
-{
-   ptext(desc, top, left, color);
+void DisplayDeviceCategory(UCHAR* desc, int top, int left, UCHAR color) {
+  ptext(desc, top, left, color);
 }

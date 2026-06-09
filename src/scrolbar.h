@@ -3,19 +3,19 @@
 
 typedef struct
 {
-   SCREEN_OBJECT_T   so;
-   int min;
-   int max;
-   int small_chg;
-   int large_chg;
-   int thumb_pos;
-   int type;
+  SCREEN_OBJECT_T so;
+  int min;
+  int max;
+  int small_chg;
+  int large_chg;
+  int thumb_pos;
+  int type;
 
-   void    (_far* OnScroll)();
+  void(_far* OnScroll)();
 
-   int attached_object;
+  int attached_object;
 
-}SCROLL_BAR_T;
+} SCROLL_BAR_T;
 
 #define SB_VERTICAL 0
 #define SB_HORIZONTAL 1

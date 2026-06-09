@@ -1,6 +1,6 @@
 //   Copyright 1996 TeCom Inc. All rights reserved
 //  File creation date 30 OCT 96
-//  Created by Mark Lauter : TMMSL     
+//  Created by Mark Lauter : TMMSL
 //   Last modified:
 
 #ifndef _PUSH_BUTTON_T_H
@@ -8,16 +8,19 @@
 
 typedef struct
 {
-   SCREEN_OBJECT_T so;
-   char   default_button;
-   UCHAR* text;
-   enum   BTN_TYPE { set, push }   btn_type;
-   enum    STATE { up, down, flat }    state;
-   UCHAR* icon; //allows 32x32 16 color icon, ununsed at this time
-//oid    (_far * pbf)();   // pbf() calls the button's action function
-   void    (*pbf)();   // pbf() calls the button's action function
-   int      btnlog;
-}PUSH_BUTTON_T;
+  SCREEN_OBJECT_T so;
+  char default_button;
+  UCHAR* text;
+  enum BTN_TYPE { set,
+                  push } btn_type;
+  enum STATE { up,
+               down,
+               flat } state;
+  UCHAR* icon;   //allows 32x32 16 color icon, ununsed at this time
+                 //oid    (_far * pbf)();   // pbf() calls the button's action function
+  void (*pbf)(); // pbf() calls the button's action function
+  int btnlog;
+} PUSH_BUTTON_T;
 
 #define PB_UP 0
 #define PB_DN 1
