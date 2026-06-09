@@ -7,13 +7,12 @@ aliases: []
 document.status: draft
 ---
 
-# Object-Oriented Programming in Plain C
+# Object-oriented programming in plain C
 
 LaneView has no C++. The toolchain (`ORIGIN = MSVC, ORIGIN_VER = 1.00`) barely had a
-usable C++ in it. And yet the entire GUI is built on a real **class system** —
-objects with data *and* methods, single inheritance, virtual dispatch, and a form of
-RTTI — assembled from nothing but `struct`, function pointers, and one deep truth
-about the C memory model.
+usable C++ in it. And yet the entire GUI runs on a real class system — objects with data
+and methods, single inheritance, virtual dispatch, and a form of RTTI — assembled from
+nothing but `struct`, function pointers, and one deep truth about the C memory model.
 
 ## The base class
 
@@ -42,20 +41,18 @@ typedef struct
 
 Three things are happening:
 
-1. **State** — `position`, `got_focus`, `visible`.
-2. **A type tag** — `enum OBJECT_TYPE type`. This is hand‑rolled **RTTI**: every object
-   knows what it is at runtime.
-3. **A vtable, inlined** — five `_far` function pointers. These are the **virtual
-   methods**. `DisplayObject` is the paint method; the rest are event handlers.
+1. State — `position`, `got_focus`, `visible`.
+2. A type tag — `enum OBJECT_TYPE type`. This is hand-rolled RTTI: every object knows what
+   it is at runtime.
+3. A vtable, inlined — five `_far` function pointers. These are the virtual methods.
+   `DisplayObject` is the paint method; the rest are event handlers.
 
-The giddy comment `//(* pbf)(); <- thats a call!!!` is the sound of someone realizing
-function pointers let you *store behavior in data*. That realization is the whole
-toolkit.
+The giddy comment `//(* pbf)(); <- thats a call!!!` is the sound of someone realizing that
+function pointers let you store behavior in data. That realization is the whole toolkit.
 
 ## Inheritance via first-member layout
 
-Every widget "subclass" embeds `SCREEN_OBJECT_T` **as its first member**. From
-`PSHBTN.H`:
+Every widget "subclass" embeds `SCREEN_OBJECT_T` as its first member. From `PSHBTN.H`:
 
 ```c
 typedef struct
@@ -71,19 +68,19 @@ typedef struct
 } PUSH_BUTTON_T;
 ```
 
-`SCROLL_BAR_T` (`scrolbar.h`), `TEXT_BOX_T`, `LISTBOX_T`, `DROPDOWN_BOX_T`,
-`SPINNER_T`, `CHECK_BOX_T`, `TIME_ENTRY_T`, `MEMO_BOX_T` — all start the same way.
+`SCROLL_BAR_T` (`scrolbar.h`), `TEXT_BOX_T`, `LISTBOX_T`, `DROPDOWN_BOX_T`, `SPINNER_T`,
+`CHECK_BOX_T`, `TIME_ENTRY_T`, `MEMO_BOX_T` — all start the same way.
 
-The C standard guarantees a struct's first member sits at offset 0 with no leading
-padding. So a `PUSH_BUTTON_T*` and a `SCREEN_OBJECT_T*` **point at the same address**.
-That is *exactly* how a C++ compiler implements single inheritance. LaneView is doing by
-hand what `class PushButton : public ScreenObject` would do for you.
+The C standard guarantees a struct's first member sits at offset 0 with no leading padding.
+So a `PUSH_BUTTON_T*` and a `SCREEN_OBJECT_T*` point at the same address. That's exactly how
+a C++ compiler implements single inheritance. LaneView does by hand what
+`class PushButton : public ScreenObject` would do for you.
 
-- **Upcast** (subclass → base): take the address of the embedded member.
+- Upcast (subclass → base): take the address of the embedded member.
   ```c
   billSO[i] = &billBtnList[i].so;     // PUSH_BUTTON_T*  ->  SCREEN_OBJECT_T*
   ```
-- **Downcast** (base → subclass): a plain pointer cast, guarded by the `type` tag.
+- Downcast (base → subclass): a plain pointer cast, guarded by the `type` tag.
   ```c
   sbptr = (SCROLL_BAR_T*)glbWindow->so[item_index];   // MLOOP.C
   ddb   = (DROPDOWN_BOX_T*)(glbWindow->so[item_index]);
@@ -91,14 +88,14 @@ hand what `class PushButton : public ScreenObject` would do for you.
 
 ## Virtual dispatch
 
-A window (`LWINDOW_T`, `LWINDOW.H`) holds a **polymorphic array of base pointers**:
+A window (`LWINDOW_T`, `LWINDOW.H`) holds a polymorphic array of base pointers:
 
 ```c
 SCREEN_OBJECT_T** so;
 ```
 
-It never needs to know what the objects *really* are to paint them. It calls the
-virtual method, passing the object as an explicit `this`:
+It never needs each object's concrete type to paint them. It calls the virtual method,
+passing the object as an explicit `this`:
 
 ```c
 // PutWindow(), lwindow.c
@@ -109,9 +106,9 @@ for (i = 0; i < thisWindow->item_count; i++) {
 }
 ```
 
-`(*obj->DisplayObject)(obj)` is `obj->DisplayObject()` in C++ terms — a virtual call
-plus the hidden `this` argument made visible. The message loop dispatches the event
-methods the same way:
+`(*obj->DisplayObject)(obj)` is `obj->DisplayObject()` in C++ terms — a virtual call plus
+the hidden `this` argument made visible. The message loop dispatches the event methods the
+same way:
 
 ```c
 (*glbWindow->so[focus]->OnMouseDown)(glbWindow->so[focus]);
@@ -119,8 +116,8 @@ methods the same way:
 (*glbWindow->OnKeyPress)(glbWindow->so[focus], c);
 ```
 
-Each subclass wires its own implementations at construction. A button is "constructed"
-as a brace‑initializer that fills the vtable slots with the button methods:
+Each subclass wires its own implementations at construction. A button is "constructed" as a
+brace-initializer that fills the vtable slots with the button methods:
 
 ```c
 PUSH_BUTTON_T billBtnList[8] = {
@@ -135,15 +132,14 @@ PUSH_BUTTON_T billBtnList[8] = {
 };
 ```
 
-So `BtnClick` is `PushButton::OnClick`, `PutButton` is `PushButton::DisplayObject`, and
-the static initializer is the constructor. Polymorphism falls out for free: the loop
-calls `DisplayObject`, and a button paints a button while a scrollbar paints a
-scrollbar.
+So `BtnClick` is `PushButton::OnClick`, `PutButton` is `PushButton::DisplayObject`, and the
+static initializer is the constructor. Polymorphism falls out for free: the loop calls
+`DisplayObject`, and a button paints a button while a scrollbar paints a scrollbar.
 
 ## RTTI in practice
 
-The `type` tag is not decoration — the framework reads it to make decisions a pure‑OO
-design would handle with more virtuals, but which here are easier as a switch:
+The `type` tag is not decoration — the framework reads it to make decisions a pure-OO design
+would handle with more virtuals, but which here are easier as a switch:
 
 ```c
 // MLOOP.C — pick the cursor based on the object under the mouse
@@ -157,7 +153,7 @@ if ((so->type != SCROLL_BARH) && (so->type != SCROLL_BARV) && (so->type != TIME_
     ...
 ```
 
-And it gates every downcast, so the cast is always type‑safe:
+And it gates every downcast, so the cast stays type-safe:
 
 ```c
 if (glbWindow->so[item_index]->type != DROP_DOWN_BOX) { ... }
@@ -185,22 +181,22 @@ typedef struct {
 } LWINDOW_T;
 ```
 
-`PutWindow()` paints the frame, loops the children's `DisplayObject`, then calls the
-window's own `Draw()` for any bespoke decoration (`RateDraw`, `TriggerWindowDraw`, …).
-`DefaultOnKeyPress()` is the base implementation most windows inherit; it simply
-forwards the key to the focused child's `OnKeyPress`. A window that wants different
-behavior just points `OnKeyPress` somewhere else. That's method overriding.
+`PutWindow()` paints the frame, loops the children's `DisplayObject`, then calls the window's
+own `Draw()` for any bespoke decoration (`RateDraw`, `TriggerWindowDraw`, …).
+`DefaultOnKeyPress()` is the base implementation most windows inherit; it forwards the key to
+the focused child's `OnKeyPress`. A window that wants different behavior points `OnKeyPress`
+somewhere else. That's method overriding.
 
 ## Why this is worth remembering
 
 This is a complete, internally consistent object model — encapsulation, inheritance,
-polymorphism, RTTI, virtual dispatch with an explicit `this` — implemented by someone
-working in a language that offers none of it, on a compiler from 1991. Once the base
-class and the dispatch convention exist, adding the ninth widget costs almost nothing:
-embed `SCREEN_OBJECT_T so` first, write five methods, fill the slots. Every window, the
-message loop, the modal dialogs, and the scrollbar‑drives‑listbox machinery all work on
-the new widget without a single change. That is the payoff of getting the abstraction
-right, and they got it right.
+polymorphism, RTTI, virtual dispatch with an explicit `this` — implemented by someone working
+in a language that offers none of it, on a compiler from 1991. Once the base class and the
+dispatch convention exist, adding the ninth widget costs almost nothing: embed
+`SCREEN_OBJECT_T so` first, write five methods, fill the slots. Every window, the message
+loop, the modal dialogs, and the scrollbar-drives-listbox machinery then work on the new
+widget without a single change. That's the payoff of getting the abstraction right, and they
+got it right.
 
-See also: [02-the-message-loop.md](02-the-message-loop.md) for how these objects are
-driven, and [05-the-widget-toolkit.md](05-the-widget-toolkit.md) for the subclasses.
+See also [[docs/notes/02-the-message-loop.md]] for how these objects are driven, and
+[[docs/notes/05-the-widget-toolkit.md]] for the subclasses.

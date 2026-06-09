@@ -7,20 +7,20 @@ aliases: []
 document.status: draft
 ---
 
-# The Message Loop (`MLOOP.C`)
+# The message loop (`MLOOP.C`)
 
-There is no operating system here to deliver events. No `GetMessage`, no interrupt‑driven
-queue, no scheduler. `MainLoop()` is a single `while (1)` that *is* the application —
-it polls the mouse, polls the keyboard, polls the home‑automation bus, updates the
-clock, blinks the caret, and dispatches every UI event, forever, cooperatively.
+There's no operating system here to deliver events. No `GetMessage`, no interrupt-driven
+queue, no scheduler. `MainLoop()` is a single `while (1)` that *is* the application — it
+polls the mouse, polls the keyboard, polls the home-automation bus, updates the clock,
+blinks the caret, and dispatches every UI event, forever, cooperatively.
 
-What makes it interesting is how much structure is packed into that one loop.
+What makes it interesting is how much structure rides in that one loop.
 
 ## Round-robin hit-testing
 
-The naive way to find "what is the mouse over?" is to scan all objects every frame.
-LaneView doesn't. It keeps a rotating cursor `item_index` and advances it **one object
-per loop iteration**:
+The naive way to find "what is the mouse over?" scans all objects every frame. LaneView
+doesn't. It keeps a rotating cursor `item_index` and advances it one object per loop
+iteration:
 
 ```c
 if (glbWindow->so[item_index]->type != DROP_DOWN_BOX) {
@@ -29,16 +29,14 @@ if (glbWindow->so[item_index]->type != DROP_DOWN_BOX) {
 }
 ```
 
-Each pass through the loop tests the mouse against *one* object — the current
-`item_index` — and against the currently focused object. Because the loop runs
-thousands of times a second and windows have a handful of objects, every object gets
-hit‑tested many times a second anyway, but each individual iteration stays cheap and
-constant‑time. It's an elegant way to amortize hit‑testing across frames without a
-spatial index, and it falls naturally out of the "do a little work each tick" loop
-philosophy. (Dropdown boxes pause the rotation while open, so the expanded list keeps
-focus.)
+Each pass tests the mouse against one object — the current `item_index` — and against the
+focused object. Because the loop runs thousands of times a second and windows hold a handful
+of objects, every object gets hit-tested many times a second anyway, while each individual
+iteration stays cheap and constant-time. It amortizes hit-testing across frames without a
+spatial index, and it falls naturally out of the "do a little work each tick" philosophy.
+Dropdown boxes pause the rotation while open, so the expanded list keeps focus.
 
-`MouseOver()` (`MOUSE.C`) is the hit test — a plain AABB check against the object's
+`MouseOver()` (`MOUSE.C`) is the hit test — an AABB check against the object's
 `COORDINATE_T`:
 
 ```c
@@ -50,10 +48,9 @@ int MouseOver(COORDINATE_T* pos) {
 
 ## A cursor state machine
 
-The pointer shows intent: an arrow over chrome, a **pointing finger** over anything
-clickable, an **I‑beam** over editable text. The loop tracks the current shape in
-`which_mouse` and only reloads the cursor bitmap on a *change* — so the cursor never
-flickers from redundant updates:
+The pointer shows intent: an arrow over chrome, a pointing finger over anything clickable, an
+I-beam over editable text. The loop tracks the current shape in `which_mouse` and reloads the
+cursor bitmap only on a change, so the cursor never flickers from redundant updates:
 
 ```c
 if (over a non-text object) {
@@ -65,20 +62,20 @@ if (over a non-text object) {
 if (nothing under cursor && which_mouse != M_ARROW) { ...; mouse_cursor(&arrow_ms); }
 ```
 
-The `last_index` / `do_it` dance avoids recomputing the cursor when the mouse hasn't
-left the object it was already over. (Those cursors are hand‑drawn bitmaps — see
-[07-mouse-cursors-and-easter-eggs.md](07-mouse-cursors-and-easter-eggs.md).)
+The `last_index` / `do_it` dance skips recomputing the cursor when the mouse hasn't left the
+object it was already over. Those cursors are hand-drawn bitmaps — see
+[[docs/notes/07-mouse-cursors-and-easter-eggs.md]].
 
 ## Press / drag-off / release — a real button model
 
-The loop implements proper push‑button semantics, the kind where dragging *off* a
-pressed button cancels it:
+The loop implements proper push-button semantics, the kind where dragging off a pressed
+button cancels it:
 
-- **Button down over an object** → set `mouse_down`, give it focus, call its
-  `OnMouseDown` (the button visually depresses).
-- **Still held, but moved off** → call `OnMouseUp` (the button pops back up) and clear
-  `mouse_down`. The click is cancelled.
-- **Released while still over the object** → call `OnClick` (the action fires).
+- Button down over an object → set `mouse_down`, give it focus, call its `OnMouseDown` (the
+  button visually depresses).
+- Still held, but moved off → call `OnMouseUp` (the button pops back up) and clear
+  `mouse_down`. The click cancels.
+- Released while still over the object → call `OnClick` (the action fires).
 
 ```c
 if (mouse_info.buttons == 0) {           // released
@@ -90,17 +87,17 @@ if (mouse_info.buttons == 0) {           // released
 }
 ```
 
-Scrollbars and time‑entries take a different path (they act on press‑and‑hold with a
-repeat timer gated by `ticks_check(9)`), which is why they're singled out by `type`
-throughout the loop.
+Scrollbars and time-entries take a different path (they act on press-and-hold with a repeat
+timer gated by `ticks_check(9)`), which is why they're singled out by `type` throughout the
+loop.
 
 ## Three-way keystroke routing
 
-Key handling is layered, and the loop's big comment says so out loud:
+Key handling is layered, and the loop's own comment spells it out:
 
 > *"system" keystrokes are handled here … "window" keystrokes are passed to the current
-> window's OnKeyPress() … "object" keystrokes are passed by the window's OnKeyPress() to
-> the object's OnKeyPress().*
+> window's OnKeyPress() … "object" keystrokes are passed by the window's OnKeyPress() to the
+> object's OnKeyPress().*
 
 ```c
 switch (c) {
@@ -121,16 +118,16 @@ switch (c) {
 }
 ```
 
-Tab traversal (`TabRight` / `TabLeft`) walks the object array, **skipping invisible
-objects** and wrapping around, then moves focus and repaints both the old and new
-object (so the focus rectangle follows). Extended keys arrive as a `0` byte followed by
-a scan code — the classic IBM PC BIOS keyboard convention — and `unkbchar()` pushes the
-byte back so the window handler can re‑read it.
+Tab traversal (`TabRight` / `TabLeft`) walks the object array, skips invisible objects, and
+wraps around, then moves focus and repaints both the old and new object so the focus
+rectangle follows. Extended keys arrive as a `0` byte followed by a scan code — the classic
+IBM PC BIOS keyboard convention — and `unkbchar()` pushes the byte back so the window handler
+can re-read it.
 
 ## A DOS app that cooperates with Windows
 
-The F1 help handler is a small marvel of pragmatism. It first asks *"am I running inside
-Windows?"* via the standard multiplex interrupt:
+The F1 help handler is a small marvel of pragmatism. It first asks "am I running inside
+Windows?" via the standard multiplex interrupt:
 
 ```c
 int IsWindowsRunning(void) {
@@ -141,14 +138,14 @@ int IsWindowsRunning(void) {
 }
 ```
 
-If Windows is up, it reads a help‑file name from `lvhlp.dat` and literally shells out to
-`winhelp` to show a real Windows help window — a DOS program reaching up into the GUI it
-runs under. If Windows isn't running, it degrades gracefully to a message box.
+If Windows is up, it reads a help-file name from `lvhlp.dat` and shells out to `winhelp` to
+show a real Windows help window — a DOS program reaching up into the GUI it runs under. If
+Windows is absent, it degrades to a message box.
 
 ## Built-in telemetry, in 1996
 
-Every keystroke and every button click is appended to `user.log`, timestamped, with the
-active window's title:
+Every keystroke and every button click appends to `user.log`, timestamped, with the active
+window's title:
 
 ```c
 // KeyLog() in MLOOP.C, BtnLog() in PSHBTN.C
@@ -157,10 +154,9 @@ fprintf(fbtnlog, "%02d/%02d/%02d\t%02d:%02d:%02d\tBTN: %d\t\t%s\tWINDOW: %s\n",
         pb->btnlog, pb->text, glbWindow->title);
 ```
 
-Each button even carries a stable numeric ID (`btnlog`) in its struct, precisely so the
-logs can be analyzed independent of label text. This is product analytics —
-session‑level usage tracking — hand‑rolled into a DOS binary years before that was a
-common idea.
+Each button even carries a stable numeric ID (`btnlog`) in its struct, precisely so the logs
+can be analyzed independent of label text. This is product analytics — session-level usage
+tracking — hand-rolled into a DOS binary years before the idea was common.
 
 ## Time, blink, and the bus
 
@@ -174,16 +170,16 @@ time(&ltime); tod = localtime(&ltime);        // keep the on-screen clock live
 if (last_shown != ltime) UpdateTop(&last_shown);
 ```
 
-`BlinkCursor()` draws/erases the text caret as a vertical line (`vline`) on a timer,
-and even special‑cases the memo box. `CheckCEBus()` is the heartbeat that lets the house
-talk back — incoming device states, load‑control signals — while the user is mid‑task.
+`BlinkCursor()` draws and erases the text caret as a vertical line (`vline`) on a timer, and
+special-cases the memo box. `CheckCEBus()` is the heartbeat that lets the house talk back —
+incoming device states, load-control signals — while the user works.
 
 ## The pattern that repeats
 
-This same loop body — mouse poll, focus/press/release dispatch, clock, CEBus, three‑way
-key routing — is **copied wholesale** into `msgbox()` and `inputbox()` so that modal
-dialogs are fully live (see [04-msgbox-and-screen-save.md](04-msgbox-and-screen-save.md)).
-There's no event abstraction shared between them; the loop *is* the abstraction, and it's
-duplicated where a modal context needs its own copy. Crude by modern taste, but it means
-a message box popped from deep inside a handler still blinks the caret, updates the
-clock, and services the automation bus while it waits for you to click OK.
+This same loop body — mouse poll, focus/press/release dispatch, clock, CEBus, three-way key
+routing — is copied wholesale into `msgbox()` and `inputbox()` so that modal dialogs stay
+fully live (see [[docs/notes/04-msgbox-and-screen-save.md]]). There's no event abstraction
+shared between them; the loop *is* the abstraction, duplicated where a modal context needs
+its own copy. Crude by modern taste, but it means a message box popped from deep inside a
+handler still blinks the caret, updates the clock, and services the automation bus while it
+waits for you to click OK.
